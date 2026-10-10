@@ -1,0 +1,5 @@
+Contact: https://github.com/anurag6569201/Anurag_Hackday/security/advisories/new
+Expires: 2027-10-10T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://github.com/anurag6569201/Anurag_Hackday/blob/main/public/.well-known/security.txt
+Policy: https://github.com/anurag6569201/Anurag_Hackday/security/policy
