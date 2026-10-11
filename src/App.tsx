@@ -1,15 +1,67 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import heroImg from './assets/hero.png'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import './App.css'
 import { ExternalLink } from './security/ExternalLink.tsx'
+import { Support } from './Support.tsx'
+
+type Page = 'home' | 'support'
+
+function pageFromHash(): Page {
+  return window.location.hash === '#/support' ? 'support' : 'home'
+}
 
 function App() {
   const [count, setCount] = useState(0)
+  const [page, setPage] = useState<Page>(pageFromHash)
+
+  useEffect(() => {
+    const onHashChange = () => {
+      setPage(pageFromHash())
+    }
+    window.addEventListener('hashchange', onHashChange)
+    return () => {
+      window.removeEventListener('hashchange', onHashChange)
+    }
+  }, [])
+
+  const goTo = (next: Page) => {
+    const hash = next === 'support' ? '#/support' : '#/'
+    if (window.location.hash === hash) {
+      setPage(next)
+      return
+    }
+    window.location.hash = hash
+  }
 
   return (
     <>
+      <nav className="site-nav" aria-label="Primary">
+        <button
+          type="button"
+          aria-current={page === 'home' ? 'page' : undefined}
+          onClick={() => {
+            goTo('home')
+          }}
+        >
+          Home
+        </button>
+        <button
+          type="button"
+          aria-current={page === 'support' ? 'page' : undefined}
+          onClick={() => {
+            goTo('support')
+          }}
+        >
+          Support
+        </button>
+      </nav>
+
+      {page === 'support' ? (
+        <Support />
+      ) : (
+        <>
       <section id="center">
         <div className="hero">
           <img src={heroImg} className="base" width="170" height="179" alt="" />
@@ -116,6 +168,8 @@ function App() {
 
       <div className="ticks"></div>
       <section id="spacer"></section>
+        </>
+      )}
     </>
   )
 }
