@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "api": "cd backend && .venv/bin/python -m flask --app app:create_app run --host 127.0.0.1 --port 5001 --reload",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",

@@ -42,6 +42,13 @@ export default defineConfig(({ mode }) => {
     },
   }
 
+  const apiProxy = {
+    '/api': {
+      target: 'http://127.0.0.1:5001',
+      changeOrigin: true,
+    },
+  }
+
   return {
     plugins: [
       react(),
@@ -96,6 +103,7 @@ export default defineConfig(({ mode }) => {
         strict: true,
       },
       headers: localSecurityHeaders,
+      proxy: apiProxy,
     },
     preview: {
       host: '127.0.0.1',
@@ -106,6 +114,7 @@ export default defineConfig(({ mode }) => {
         ...localSecurityHeaders,
         'Cross-Origin-Embedder-Policy': 'require-corp',
       },
+      proxy: apiProxy,
     },
   }
 })
