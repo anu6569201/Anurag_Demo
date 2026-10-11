@@ -1,77 +1,14 @@
+import { useEffect, useState } from 'react'
+import { fetchProblems, type Problem, type Severity } from './api.ts'
 import './Support.css'
-
-type Severity = 'critical' | 'major'
-
-type Problem = {
-  id: string
-  severity: Severity
-  title: string
-  detail: string
-  status: 'Investigating' | 'Identified' | 'Monitoring'
-  area: string
-  opened: string
-}
-
-const PROBLEMS: readonly Problem[] = [
-  {
-    id: 'INC-1042',
-    severity: 'critical',
-    title: 'Sign-in sessions end immediately',
-    detail:
-      'A successful login is cleared at once, and people are returned to the sign-in screen. No one can stay signed in.',
-    status: 'Investigating',
-    area: 'Authentication',
-    opened: 'Oct 12, 2026 · 00:40 IST',
-  },
-  {
-    id: 'INC-1043',
-    severity: 'critical',
-    title: 'Core data requests are failing',
-    detail:
-      'Reads and writes to the data service return an error. Lists, saves, and updates are unavailable.',
-    status: 'Identified',
-    area: 'API',
-    opened: 'Oct 12, 2026 · 01:05 IST',
-  },
-  {
-    id: 'INC-0988',
-    severity: 'major',
-    title: 'Search omits records from the last day',
-    detail:
-      'Newly created records do not appear in search results until the next index run. Direct links to those records still open.',
-    status: 'Investigating',
-    area: 'Search',
-    opened: 'Oct 11, 2026 · 18:20 IST',
-  },
-  {
-    id: 'INC-0974',
-    severity: 'major',
-    title: 'Exports time out on large reports',
-    detail:
-      'CSV export stops responding once a report passes about 10,000 rows. Smaller exports complete normally.',
-    status: 'Identified',
-    area: 'Reports',
-    opened: 'Oct 11, 2026 · 11:15 IST',
-  },
-  {
-    id: 'INC-0961',
-    severity: 'major',
-    title: 'In-app notifications arrive hours late',
-    detail:
-      'Mentions and assignment alerts are delivered, but several hours after the event. Email copies are on time.',
-    status: 'Monitoring',
-    area: 'Notifications',
-    opened: 'Oct 10, 2026 · 16:45 IST',
-  },
-]
 
 const SEVERITY_LABEL: Record<Severity, string> = {
   critical: 'Critical',
   major: 'Major',
 }
 
-function problemsBySeverity(severity: Severity): Problem[] {
-  return PROBLEMS.filter((problem) => problem.severity === severity)
+function problemsBySeverity(problems: readonly Problem[], severity: Severity): Problem[] {
+  return problems.filter((problem) => problem.severity === severity)
 }
 
 function ProblemCard({ problem }: { problem: Problem }) {
@@ -117,26 +54,76 @@ function ProblemGroup({
   )
 }
 
+type LoadState =
+  | { status: 'loading' }
+  | { status: 'ready'; problems: readonly Problem[] }
+  | { status: 'error' }
+
 export function Support() {
-  const critical = problemsBySeverity('critical')
-  const major = problemsBySeverity('major')
+  const [state, setState] = useState<LoadState>({ status: 'loading' })
+  const [reloadKey, setReloadKey] = useState(0)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    fetchProblems(controller.signal).then(
+      (problems) => {
+        setState({ status: 'ready', problems })
+      },
+      (error: unknown) => {
+        if (error instanceof Error && error.name === 'AbortError') return
+        setState({ status: 'error' })
+      },
+    )
+    return () => {
+      controller.abort()
+    }
+  }, [reloadKey])
+
+  const problems = state.status === 'ready' ? state.problems : []
+  const critical = problemsBySeverity(problems, 'critical')
+  const major = problemsBySeverity(problems, 'major')
 
   return (
     <section className="support">
       <header className="support-header">
         <h1>Support</h1>
         <p>Open problems affecting the product right now.</p>
-        <ul className="support-summary">
-          <li>
-            <strong>{critical.length}</strong> critical
-          </li>
-          <li>
-            <strong>{major.length}</strong> major
-          </li>
-        </ul>
+        {state.status === 'loading' ? (
+          <p className="support-status" role="status">
+            Loading open problems…
+          </p>
+        ) : null}
+        {state.status === 'error' ? (
+          <p className="support-status" role="alert">
+            Open problems could not be loaded.
+            <button
+              type="button"
+              className="support-retry"
+              onClick={() => {
+                setReloadKey((key) => key + 1)
+              }}
+            >
+              Try again
+            </button>
+          </p>
+        ) : null}
+        {state.status === 'ready' ? (
+          <ul className="support-summary">
+            <li>
+              <strong>{critical.length}</strong> critical
+            </li>
+            <li>
+              <strong>{major.length}</strong> major
+            </li>
+          </ul>
+        ) : null}
       </header>
-      <ProblemGroup severity="critical" problems={critical} />
-      <ProblemGroup severity="major" problems={major} />
+      {state.status === 'ready' ? (
+        <>
+          <ProblemGroup severity="critical" problems={critical} />
+          <ProblemGroup severity="major" problems={major} />
+        </>
+      ) : null}
     </section>
   )
 }

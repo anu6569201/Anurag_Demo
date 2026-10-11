@@ -1,16 +1,35 @@
 # Anurag Hackday
 
-React 19, TypeScript, and Vite, with a browser security baseline applied in development, preview, and the production build.
+React 19, TypeScript, and Vite, with a Flask API and a browser security baseline applied in development, preview, and the production build.
 
 ## Scripts
 
 ```bash
 npm install
+python3 -m venv backend/.venv
+backend/.venv/bin/pip install -r backend/requirements.txt
+npm run api       # http://127.0.0.1:5001
 npm run dev       # http://127.0.0.1:5173
 npm run build
 npm run preview   # http://127.0.0.1:4173
 npm run lint
 npm run audit
+```
+
+## API
+
+The Flask app lives in `backend/` and serves:
+
+- `GET /api/health`
+- `GET /api/problems`
+
+`npm run dev` and `npm run preview` proxy `/api` to `http://127.0.0.1:5001`. Leave `VITE_API_BASE_URL` empty so the browser stays on the Vite origin and `connect-src` remains `'self'`. The home page reports whether that health check succeeds, and Support loads its incident list from `/api/problems`.
+
+When the API is hosted on another origin, set `VITE_API_BASE_URL` to that origin (https in production) and set `FLASK_ALLOWED_ORIGINS` to a comma-separated allowlist of frontend origins. The default allowlist is the local Vite dev and preview origins. The server listens on `127.0.0.1` only.
+
+```bash
+backend/.venv/bin/pip install -r backend/requirements-dev.txt
+cd backend && .venv/bin/pytest
 ```
 
 ## Security baseline

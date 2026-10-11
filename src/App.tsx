@@ -3,6 +3,7 @@ import heroImg from './assets/hero.png'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import './App.css'
+import { ApiStatus } from './ApiStatus.tsx'
 import { ExternalLink } from './security/ExternalLink.tsx'
 import { Support } from './Support.tsx'
 
@@ -81,6 +82,7 @@ function App() {
         >
           Count is {count}
         </button>
+        <ApiStatus />
       </section>
 
       <div className="ticks"></div>
